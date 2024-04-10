@@ -1,0 +1,39 @@
+zabbix_export:
+  version: '6.0'
+  date: '2024-04-10T13:23:09Z'
+  groups:
+    -
+      uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    -
+      uuid: dbfefa1d2622450e8636b613c2b77606
+      template: 'Custom RabbitMQ Queues Length'
+      name: 'Custom RabbitMQ Queues Length'
+      groups:
+        -
+          name: Templates
+      discovery_rules:
+        -
+          uuid: 3b8a33356c6b4351b972d9f1fa723f35
+          name: 'Discover RabbitMQ Queues'
+          key: 'custom.rmq_queues_discovery[{$RMQ.URL},{$RMQ.USER},{$RMQ.PASS}]'
+          delay: 1h
+          lifetime: 1h
+          item_prototypes:
+            -
+              uuid: b6f03733735f4136b38c9acb6a91fb8e
+              name: 'Number of messages in {#RMQ_QUEUE} queue'
+              key: 'custom.rmq_queue_messages_count[{$RMQ.URL},{$RMQ.USER},{$RMQ.PASS},{#RMQ_QUEUE}]'
+              history: 7d
+              trends: 30d
+              trigger_prototypes:
+                -
+                  uuid: 8d438aa8e19849e5a2b3ff1c64263fe2
+                  expression: 'min(/Custom RabbitMQ Queues Length/custom.rmq_queue_messages_count[{$RMQ.URL},{$RMQ.USER},{$RMQ.PASS},{#RMQ_QUEUE}],1m)>{$RMQ.QUEUE.MAX.MSGS}'
+                  name: 'RabbitMQ: There are more than {$RMQ.QUEUE.MAX.MSGS} messages in {#RMQ_QUEUE} queue in last minute'
+                  priority: DISASTER
+      macros:
+        -
+          macro: '{$RMQ.QUEUE.MAX.MSGS}'
+          value: '300'
